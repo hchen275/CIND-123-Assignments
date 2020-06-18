@@ -1,0 +1,168 @@
+---
+title: 'CIND 123 - Data Analytics: Basic Methods'
+author: 
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+<center> <h1> Assignment 3 (10%) </h1> </center>
+<center>  <h3> Haozhe Chen </h2> </center>
+<center> <h3> CIND 123-DHA Student ID: 501068792 </h2> </center>
+---
+## Instructions 
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. Review this website for more details on using R Markdown <http://rmarkdown.rstudio.com>.
+
+Use RStudio for this assignment. Complete the assignment by inserting your R code wherever you see the string "#INSERT YOUR ANSWER HERE".
+
+When you click the **Knit** button, a document (PDF, Word, or HTML format) will be generated that includes both the assignment content as well as the output of any embedded R code chunks.
+
+Submit **both**  the rmd and generated output files. Failing to submit both files will be subject to mark deduction.
+
+## Sample Question and Solution
+
+Use `seq()` to create the vector $(2,4,6,\ldots,20)$.
+
+```{r}
+#Insert your code here.
+seq(2,20,by = 2)
+```
+
+
+## Question 1
+
+Use the following commands to install the `airquality` dataset and load the `datasets` package into your session.
+```{r}
+#install.packages("datasets")
+library(datasets) 
+data(airquality)
+str(airquality)
+```
+
+
+a) Use a histogram to assess the normality of the `Ozone` variable, then explain why it does not appear normally distributed.
+```{r}
+hist(airquality$Ozone,
+     xlim = c(0,200),
+     ylim = c(0,40),)
+#The dataframe only contains 153 samples, some of which are NAs. It could be that the sample size is not large enough for the data points to appear as normally distributed (i.e., easily affected by extreme values)
+```
+
+b) Create a set of boxplots that shows the distribution of `Ozone` in each month. 
+Use different colors for each month.
+```{r}
+library(ggplot2)
+airqualitynonas <- na.omit(airquality)
+ozone <- airqualitynonas$Ozone
+month <- factor(airqualitynonas$Month, order = TRUE, labels = c("May", "June", "July", "August", "September"))
+ggplot(airqualitynonas, aes(x=month, y=ozone, color=month)) +
+geom_boxplot()+
+theme_classic()
+```
+
+
+
+##Question 2
+
+Use the following commands to install the `marketing` dataset and load the `datarium` package into your session.
+```{r}
+#install.packages("datarium")
+library(datarium)
+data("marketing", package = "datarium")
+str(marketing)
+```
+
+a)  Find the covariance between the `Sales` and the advertising budget of `newspaper`. Comment on the output, in terms of the strength and direction of the relationship.
+```{r}
+cov(marketing$sales, marketing$newspaper, method = "pearson")
+#We know that the two variables have a positive correlation because the covariance is a positive number. But because the covariance value is not standardized, it is difficult to determine the strength of the two variable. To determine the strengh of a linear relationship, we will need to calculate the correlation instead, which ranged from -1 to 1, with -1 showing a perfect negative linear relationship, 1 showing a perfect positive linear relationship, and 0 being no linear relationship at all. 
+```
+
+
+b) Plot the `Sales` as a function of the `Youtube` variable using a scatterplot, then graph the least-square line on the same plot. 
+Hint: You may use the `ggplot()` function from `ggplot2` package. 
+
+```{r}
+plot(marketing$youtube, marketing$sales)
+abline(lm(sales ~ youtube, data=marketing))
+```
+
+c) Use the regression line to predict the `Sales` amount when `newspaper` budget is `$136.80K`. Comment on the difference between the output and the expected value. 
+```{r}
+slmodel <- lm(sales~newspaper, data=marketing)
+c<-predict(slmodel,data.frame(newspaper=136.80))
+c
+#Predicted value is calculated to be 22.3037 whereas the observed value is 15, as per the marketing dataframe.
+```
+
+d) Use `newspaper` and `facebook` variables to build a linear regression model to predict `sales`. Display a summary of your model indicating Residuals, Coefficients, ..., etc. What conclusion can you draw from this summary?
+```{r}
+mlmodel <- lm(sales~newspaper+facebook, data=marketing)
+summary(mlmodel)
+#Facebook budget has a stronger positive correlation with sales than newspaper budget does. From the positive intercerpt we know that other factors besides newspaper and facebook budgets also contribute to sales. In other words, when there is no advertising on facebook or on newspaper, we still have some sales. 
+```
+
+e) Use the regression line to predict the `Sales` amount when `newspaper` budget is `$136.80K` and `facebook` is `$43.92K`.
+```{r}
+newdata <- data.frame(newspaper=136.80, facebook=43.92)
+e <- predict(mlmodel, newdata)
+e
+```
+
+f) What is the difference between the output in (e) and the output in (c)
+```{r}
+c-e
+```
+
+g) Display the correlation matrix of the variables: `youtube`, `facebook`, `newspaper` and `sales`. What conclusion can you draw?
+```{r}
+cor(marketing)
+#From the last coloum of the matrix we can see that, although all the three media platforms affect sales positively, youtube budget and sales have the strongest positive linear correlation whereas newspaper and sales have the weakest positive linear correlation. In other words, advertising on youtube is the most effective way to drive up sales whereas advertising on newspaper is the least effective. 
+```
+
+h) In your opinion, which statistical test should be used to discuss the relationship between `youtube` and `sales`?
+Hint:  Review the differnce between Pearson and Spearman tests.
+```{r}
+cor(marketing$sales, marketing$youtube, method = "pearson")
+#Spearman test is calculated based on ranks, so it depicts monotonic relationships and is often used to evaluate relationships involving ordinate values. Pearson test on the other hand is calculated on true values, so it depicts linear relationships. Because the marketing dataset contains pairs of true values of youtube budget and sales, using pearson test would be more appropriate in my view. 
+```
+
+
+##Question 3
+
+Install the `carData` dataset on your computer using the command `install.packages("carData")`. Then load the `CanPop: Canadian Population Data` into your session using the following command.  The CanPop` has 16 rows and 2 columns and represent the decennial time-series of Canadian population between 1851 and 2001.
+```{r}
+#install.packages("carData")
+library("carData")
+data("CanPop", package = "carData")
+str(CanPop)
+```
+
+a) Which of the two variables is the independent variable and which is the dependent variable? Explain your choice.
+```{r}
+#Year is the independent variable and population is the dependent variable. One of the applicabilities of this dataset could be viewed as to create a function that lets us know the population of a particular year in the past as well as predict the population of a particular year in the future. Therefore, population is dependent on the year that we are interested in. 
+```
+
+b) Assuming that year and population are linearly related, give the equation and the graph of the least-squares regression line.
+Hint: use lm() function.
+```{r}
+canpop <- lm(population~year, data = CanPop)
+canpop
+#equation: y=-337.0986+0.1813*x (where y=population, x=population)
+```
+```{r}
+plot(CanPop$year,CanPop$population)
+abline(canpop)
+```
+
+c) Explain the meaning of the slope and y-intercept for the least-squares regression line in (b).
+```{r}
+#The slope represents the rate at which the Canadian polulation increases in relation to the passage of time. In this case, it can be said that each year the Canadian population increases by 0.1831 times whatever the unit is used in the dataset. The y-intercept could be viewed as the starting population when the time is 0, so to speak. In the context of this question though, the y-intercept does not have a meaningful interpretation because the dataset started in year 1891, so discussing what the population was back when the time was 0 is out of the scope of this dataset.
+```
+
+d) In year 2020, what would you predict the population's size to be.  Does the value of the predicted size matches your expectations? Explain.
+```{r}
+predict(canpop, data.frame(year=2020))
+#No. I would expect the Canadian popolation to be more than what is predicted by the equation. From the graph in question b, we can see the dots do not form a lienar relationship, but more resemble an exponential function. This is especially true as we can see the populations of 1971, 1981, 1991, and 2001 are all above the linear function line. As such, it is reasonable to assume that by 2020, the population should be more than the predicted 29.20.   
+```
